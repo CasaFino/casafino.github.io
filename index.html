@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b2287">
+<title>CasaFino</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{--vert:#0b2287;--vert2:#0b2287;--or:#b8860b;--fond:#f4f2ee;--carte:#fff;--texte:#1d1d1b;--gris:#6b6b66;--ligne:#e2dfd8;
+--rouge:#b3261e;--orange:#b26a00;--bleu:#1f5f8b;--r:12px}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--fond);color:var(--texte);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--vert);color:#fff;border-bottom:3px solid var(--or);padding:10px 16px calc(10px);display:flex;align-items:center;gap:10px}
+header h1{font-size:19px;margin:0;flex:1;letter-spacing:.3px}
+header small{display:block;font-size:12px;opacity:.85;font-weight:400}
+.pastille{font-size:12px;padding:3px 8px;border-radius:99px;background:rgba(255,255,255,.18);white-space:nowrap}
+.pastille.hors{background:#c77700}
+button{font:inherit;border:0;border-radius:10px;padding:12px 16px;cursor:pointer}
+.btn{background:var(--vert2);color:#fff;font-weight:600;width:100%}
+.btn:disabled{opacity:.5}
+.btn2{background:#e7e4dc;color:var(--texte)}
+.icone{background:transparent;color:#fff;padding:6px 8px;font-size:20px}
+main{padding:12px 16px 90px;max-width:720px;margin:0 auto}
+.carte{background:var(--carte);border-radius:var(--r);padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.06);margin-bottom:12px}
+label{display:block;font-size:14px;color:var(--gris);margin:12px 0 4px}
+input,select{font:inherit;width:100%;padding:12px;border:1px solid var(--ligne);border-radius:10px;background:#fff;color:var(--texte)}
+input:focus{outline:2px solid var(--vert2);border-color:transparent}
+.err{color:var(--rouge);font-size:14px;min-height:20px;margin-top:8px}
+.info{color:var(--gris);font-size:13px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 0 10px;scrollbar-width:none}
+.chip{flex:none;background:#fff;border:1px solid var(--ligne);color:var(--texte);padding:8px 12px;border-radius:99px;font-size:14px}
+.chip.on{background:var(--vert2);color:#fff;border-color:var(--vert2)}
+.art{display:flex;gap:12px;align-items:center;padding:12px 14px;margin-bottom:8px;cursor:pointer}
+.art .g{flex:1;min-width:0}
+.art b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.art .d{text-align:right;white-space:nowrap}
+.prix{font-weight:700}
+.badge{display:inline-block;font-size:11px;padding:2px 7px;border-radius:99px;background:#eee;color:var(--gris);margin-top:3px}
+.badge.fin{background:#fff1dc;color:var(--orange)}
+.badge.promo{background:#e3f0fb;color:var(--bleu)}
+.badge.ok{background:#e8ecfa;color:var(--vert2)}
+.logo{display:block;width:220px;max-width:70%;margin:6px auto 14px}
+.grille{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
+.grille div span{display:block;font-size:12px;color:var(--gris)}
+.grille div b{font-size:16px}
+h2{font-size:20px;margin:0 0 4px}
+h3{font-size:15px;margin:16px 0 8px;color:var(--or)}
+.res{background:#f3f5fc;border-radius:10px;padding:12px;margin-top:10px;font-size:15px}
+.res .total{font-size:20px;font-weight:700}
+.alerte{border-left:4px solid var(--orange);padding:8px 10px;background:#fff8ec;border-radius:6px;margin-top:8px;font-size:14px}
+.alerte.rouge{border-color:var(--rouge);background:#fdeeee}
+.alerte.vert{border-color:#2e7d32;background:#eef6ea}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td{padding:6px 0;border-bottom:1px solid var(--ligne)}
+td:last-child{text-align:right}
+.vide{text-align:center;color:var(--gris);padding:30px 0}
+.cache{display:none!important}
+.retour{background:none;color:var(--vert2);padding:4px 0 10px;font-weight:600}
+#barreInstall{position:fixed;left:16px;right:16px;bottom:16px;z-index:9;max-width:688px;margin:0 auto}
+footer{text-align:center;font-size:12px;color:var(--gris);padding:8px 0 20px}
+</style>
+</head>
+<body>
+<header>
+  <h1>CasaFino<small id="hAgent"></small></h1>
+  <span id="etatReseau" class="pastille">…</span>
+  <button id="bActu" class="icone cache" title="Actualiser" aria-label="Actualiser">⟳</button>
+  <button id="bMenu" class="icone cache" title="Menu" aria-label="Menu">☰</button>
+</header>
+
+<main>
+  <!-- 1. Clé de l'appareil -->
+  <section id="vCle" class="cache">
+    <div class="carte">
+      <img class="logo" src="logo.png" alt="CasaFino, l'art de la finition">
+      <h2>Activer ce téléphone</h2>
+      <p class="info">Saisissez la clé d'appareil donnée par la direction (menu CasaFino › Créer une clé d'appareil). Une seule fois par téléphone.</p>
+      <label for="iCle">Clé de l'appareil</label>
+      <input id="iCle" autocomplete="off" autocapitalize="characters" placeholder="ABCD-EFGH">
+      <div class="err" id="eCle"></div>
+      <button class="btn" id="bCle">Continuer</button>
+    </div>
+  </section>
+
+  <!-- 2. Connexion -->
+  <section id="vLogin" class="cache">
+    <div class="carte">
+      <img class="logo" src="logo.png" alt="CasaFino, l'art de la finition">
+      <h2>Connexion</h2>
+      <label for="iAgent">Nom</label>
+      <input id="iAgent" autocomplete="username" autocapitalize="characters" placeholder="Ex. WALID">
+      <label for="iPin">Code PIN</label>
+      <input id="iPin" type="password" inputmode="numeric" autocomplete="current-password" maxlength="6">
+      <div class="err" id="eLogin"></div>
+      <button class="btn" id="bLogin">Se connecter</button>
+      <p class="info" style="margin-top:14px">La première connexion demande du réseau. Ensuite, l'app fonctionne hors ligne.</p>
+      <button class="btn2" id="bChangerCle" style="width:100%;margin-top:6px">Changer la clé de l'appareil</button>
+    </div>
+  </section>
+
+  <!-- 3. Catalogue -->
+  <section id="vCatalogue" class="cache">
+    <input id="iRech" type="search" placeholder="Rechercher (nom, code, format)…" aria-label="Rechercher">
+    <div class="chips" id="chips"></div>
+    <div id="liste"></div>
+    <p class="info" id="infoMaj" style="text-align:center"></p>
+  </section>
+
+  <!-- 4. Fiche article -->
+  <section id="vFiche" class="cache">
+    <button class="retour" id="bRetour">‹ Catalogue</button>
+    <div id="fiche"></div>
+  </section>
+
+  <!-- Menu -->
+  <section id="vMenu" class="cache">
+    <button class="retour" id="bRetourMenu">‹ Retour</button>
+    <div class="carte">
+      <div id="menuInfo" class="info"></div>
+      <button class="btn" id="bMenuActu" style="margin-top:14px">Actualiser les données</button>
+      <button class="btn2" id="bDeco" style="width:100%;margin-top:8px">Se déconnecter</button>
+    </div>
+  </section>
+  <footer id="pied"></footer>
+</main>
+<div id="barreInstall" class="cache"><button class="btn" id="bInstall">Installer CasaFino sur ce téléphone</button></div>
+<script src="app.js"></script>
+</body>
+</html>
