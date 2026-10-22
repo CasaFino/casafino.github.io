@@ -9,30 +9,35 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
-:root{--vert:#0b2287;--vert2:#0b2287;--or:#b8860b;--fond:#f4f2ee;--carte:#fff;--texte:#1d1d1b;--gris:#6b6b66;--ligne:#e2dfd8;
---rouge:#b3261e;--orange:#b26a00;--bleu:#1f5f8b;--r:12px}
+:root{--bleu:#0b2287;--or:#b8860b;--fond:#f4f2ee;--carte:#fff;--texte:#1d1d1b;--gris:#6b6b66;--ligne:#e2dfd8;
+--rouge:#b3261e;--orange:#b26a00;--vert:#2e7d32;--info:#1f5f8b;--r:12px}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--fond);color:var(--texte);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
-header{position:sticky;top:0;z-index:5;background:var(--vert);color:#fff;border-bottom:3px solid var(--or);padding:10px 16px calc(10px);display:flex;align-items:center;gap:10px}
-header h1{font-size:19px;margin:0;flex:1;letter-spacing:.3px}
+header{position:sticky;top:0;z-index:5;background:var(--bleu);color:#fff;border-bottom:3px solid var(--or);padding:10px 16px;display:flex;align-items:center;gap:8px}
+header h1{font-size:19px;margin:0;flex:1;letter-spacing:.3px;cursor:pointer}
 header small{display:block;font-size:12px;opacity:.85;font-weight:400}
-.pastille{font-size:12px;padding:3px 8px;border-radius:99px;background:rgba(255,255,255,.18);white-space:nowrap}
+.pastille{font-size:12px;padding:3px 8px;border-radius:99px;background:rgba(255,255,255,.18);white-space:nowrap;cursor:pointer}
 .pastille.hors{background:#c77700}
+.pastille.attente{background:#b8860b}
 button{font:inherit;border:0;border-radius:10px;padding:12px 16px;cursor:pointer}
-.btn{background:var(--vert2);color:#fff;font-weight:600;width:100%}
+.btn{background:var(--bleu);color:#fff;font-weight:600;width:100%}
 .btn:disabled{opacity:.5}
+.btn.danger{background:var(--rouge)}
 .btn2{background:#e7e4dc;color:var(--texte)}
+.ligneBtn{display:flex;gap:8px}
+.ligneBtn>*{flex:1}
 .icone{background:transparent;color:#fff;padding:6px 8px;font-size:20px}
 main{padding:12px 16px 90px;max-width:720px;margin:0 auto}
 .carte{background:var(--carte);border-radius:var(--r);padding:16px;box-shadow:0 1px 2px rgba(0,0,0,.06);margin-bottom:12px}
 label{display:block;font-size:14px;color:var(--gris);margin:12px 0 4px}
 input,select{font:inherit;width:100%;padding:12px;border:1px solid var(--ligne);border-radius:10px;background:#fff;color:var(--texte)}
-input:focus{outline:2px solid var(--vert2);border-color:transparent}
+input:focus,select:focus{outline:2px solid var(--bleu);border-color:transparent}
+.avecBtn{display:flex;gap:8px}.avecBtn input{flex:1}.avecBtn button{flex:none}
 .err{color:var(--rouge);font-size:14px;min-height:20px;margin-top:8px}
 .info{color:var(--gris);font-size:13px}
 .chips{display:flex;gap:8px;overflow-x:auto;padding:4px 0 10px;scrollbar-width:none}
 .chip{flex:none;background:#fff;border:1px solid var(--ligne);color:var(--texte);padding:8px 12px;border-radius:99px;font-size:14px}
-.chip.on{background:var(--vert2);color:#fff;border-color:var(--vert2)}
+.chip.on{background:var(--bleu);color:#fff;border-color:var(--bleu)}
 .art{display:flex;gap:12px;align-items:center;padding:12px 14px;margin-bottom:8px;cursor:pointer}
 .art .g{flex:1;min-width:0}
 .art b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -40,8 +45,9 @@ input:focus{outline:2px solid var(--vert2);border-color:transparent}
 .prix{font-weight:700}
 .badge{display:inline-block;font-size:11px;padding:2px 7px;border-radius:99px;background:#eee;color:var(--gris);margin-top:3px}
 .badge.fin{background:#fff1dc;color:var(--orange)}
-.badge.promo{background:#e3f0fb;color:var(--bleu)}
-.badge.ok{background:#e8ecfa;color:var(--vert2)}
+.badge.promo{background:#e3f0fb;color:var(--info)}
+.badge.ok{background:#e8ecfa;color:var(--bleu)}
+.badge.rouge{background:#fdeeee;color:var(--rouge)}
 .logo{display:block;width:220px;max-width:70%;margin:6px auto 14px}
 .grille{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
 .grille div span{display:block;font-size:12px;color:var(--gris)}
@@ -52,27 +58,53 @@ h3{font-size:15px;margin:16px 0 8px;color:var(--or)}
 .res .total{font-size:20px;font-weight:700}
 .alerte{border-left:4px solid var(--orange);padding:8px 10px;background:#fff8ec;border-radius:6px;margin-top:8px;font-size:14px}
 .alerte.rouge{border-color:var(--rouge);background:#fdeeee}
-.alerte.vert{border-color:#2e7d32;background:#eef6ea}
+.alerte.vert{border-color:var(--vert);background:#eef6ea}
 table{width:100%;border-collapse:collapse;font-size:14px}
-td{padding:6px 0;border-bottom:1px solid var(--ligne)}
+td{padding:6px 0;border-bottom:1px solid var(--ligne);vertical-align:top}
 td:last-child{text-align:right}
 .vide{text-align:center;color:var(--gris);padding:30px 0}
 .cache{display:none!important}
-.retour{background:none;color:var(--vert2);padding:4px 0 10px;font-weight:600}
+.retour{background:none;color:var(--bleu);padding:4px 0 10px;font-weight:600}
+.tuiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tuile{background:#fff;border-radius:var(--r);padding:18px 12px;text-align:center;box-shadow:0 1px 2px rgba(0,0,0,.06);cursor:pointer;position:relative;color:var(--texte)}
+.tuile .ic{font-size:30px;display:block;margin-bottom:6px}
+.tuile b{font-size:15px}
+.tuile .nb{position:absolute;top:8px;right:8px;background:var(--orange);color:#fff;border-radius:99px;font-size:12px;padding:1px 8px;font-weight:700}
+.progression{height:8px;background:#e7e4dc;border-radius:99px;overflow:hidden;margin-top:6px}
+.progression i{display:block;height:100%;background:var(--bleu)}
+.ok{color:var(--vert)}.ko{color:var(--rouge)}.plus{color:var(--orange)}
+#toast{position:fixed;left:16px;right:16px;bottom:20px;z-index:20;max-width:560px;margin:0 auto;background:#1d1d1b;color:#fff;padding:12px 16px;border-radius:10px;font-size:15px;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+#toast.erreur{background:var(--rouge)}
+#scan{position:fixed;inset:0;z-index:30;background:#000;display:flex;flex-direction:column}
+#scan video{flex:1;width:100%;object-fit:cover;min-height:0}
+#scan .cadre{position:absolute;left:50%;top:40%;width:60vmin;height:60vmin;transform:translate(-50%,-50%);border:3px solid #fff;border-radius:16px;box-shadow:0 0 0 2000px rgba(0,0,0,.35);pointer-events:none}
+#scan .bas{background:#fff;padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
 #barreInstall{position:fixed;left:16px;right:16px;bottom:16px;z-index:9;max-width:688px;margin:0 auto}
 footer{text-align:center;font-size:12px;color:var(--gris);padding:8px 0 20px}
+#print{display:none}
+@media print{
+  @page{size:A4;margin:0}
+  body{background:#fff}
+  header,main,#toast,#scan,#barreInstall{display:none!important}
+  #print{display:block}
+  .planche{width:210mm;height:297mm;display:grid;grid-template-columns:repeat(3,70mm);grid-auto-rows:37.125mm;page-break-after:always}
+  .etiq{display:flex;align-items:center;gap:3mm;padding:3mm 4mm;overflow:hidden}
+  .etiq svg,.etiq img{width:29mm;height:29mm;flex:none}
+  .etiq b{font:700 20pt/1 Arial,sans-serif;display:block}
+  .etiq span{font:9pt Arial,sans-serif;color:#0b2287;display:block;margin-top:2mm}
+}
 </style>
 </head>
 <body>
 <header>
-  <h1>CasaFino<small id="hAgent"></small></h1>
-  <span id="etatReseau" class="pastille">…</span>
+  <h1 id="hTitre">CasaFino<small id="hAgent"></small></h1>
+  <span id="etatReseau" class="pastille" title="Synchronisation">…</span>
   <button id="bActu" class="icone cache" title="Actualiser" aria-label="Actualiser">⟳</button>
   <button id="bMenu" class="icone cache" title="Menu" aria-label="Menu">☰</button>
 </header>
 
 <main>
-  <!-- 1. Clé de l'appareil -->
+  <!-- Clé de l'appareil -->
   <section id="vCle" class="cache">
     <div class="carte">
       <img class="logo" src="logo.png" alt="CasaFino, l'art de la finition">
@@ -85,7 +117,7 @@ footer{text-align:center;font-size:12px;color:var(--gris);padding:8px 0 20px}
     </div>
   </section>
 
-  <!-- 2. Connexion -->
+  <!-- Connexion -->
   <section id="vLogin" class="cache">
     <div class="carte">
       <img class="logo" src="logo.png" alt="CasaFino, l'art de la finition">
@@ -101,23 +133,84 @@ footer{text-align:center;font-size:12px;color:var(--gris);padding:8px 0 20px}
     </div>
   </section>
 
-  <!-- 3. Catalogue -->
+  <!-- Accueil -->
+  <section id="vAccueil" class="cache">
+    <div class="tuiles" id="tuiles"></div>
+    <p class="info" id="infoAccueil" style="text-align:center;margin-top:16px"></p>
+  </section>
+
+  <!-- Catalogue -->
   <section id="vCatalogue" class="cache">
+    <button class="retour" data-aller="accueil">‹ Accueil</button>
     <input id="iRech" type="search" placeholder="Rechercher (nom, code, format)…" aria-label="Rechercher">
     <div class="chips" id="chips"></div>
     <div id="liste"></div>
     <p class="info" id="infoMaj" style="text-align:center"></p>
   </section>
 
-  <!-- 4. Fiche article -->
+  <!-- Fiche article -->
   <section id="vFiche" class="cache">
-    <button class="retour" id="bRetour">‹ Catalogue</button>
+    <button class="retour" id="bRetourFiche">‹ Catalogue</button>
     <div id="fiche"></div>
+  </section>
+
+  <!-- Réceptions -->
+  <section id="vReceptions" class="cache">
+    <button class="retour" data-aller="accueil">‹ Accueil</button>
+    <div id="receptions"></div>
+  </section>
+  <section id="vReception" class="cache">
+    <button class="retour" data-aller="receptions">‹ Réceptions</button>
+    <div id="reception"></div>
+  </section>
+
+  <!-- Palette -->
+  <section id="vPalette" class="cache">
+    <button class="retour" data-aller="accueil">‹ Accueil</button>
+    <div class="carte">
+      <h2>Palette</h2>
+      <p class="info">Scannez l'étiquette d'une palette pour la déplacer ou déclarer une casse.</p>
+      <div class="avecBtn"><input id="iPalette" autocapitalize="characters" placeholder="P00001"><button class="btn2" id="bOuvrirPalette">OK</button></div>
+      <button class="btn" id="bScanPalette" style="margin-top:10px">📷 Scanner une palette</button>
+    </div>
+    <div id="palette"></div>
+  </section>
+
+  <!-- Inventaire -->
+  <section id="vInventaire" class="cache">
+    <button class="retour" data-aller="accueil">‹ Accueil</button>
+    <div id="inventaire"></div>
+  </section>
+
+  <!-- À repositionner -->
+  <section id="vRepos" class="cache">
+    <button class="retour" data-aller="accueil">‹ Accueil</button>
+    <div id="repos"></div>
+  </section>
+
+  <!-- Étiquettes -->
+  <section id="vEtiquettes" class="cache">
+    <button class="retour" data-aller="accueil">‹ Accueil</button>
+    <div class="carte">
+      <h2>Étiquettes QR des palettes</h2>
+      <p class="info">À imprimer depuis un ordinateur sur planches A4 de 24 étiquettes (3 × 8, 70 × 37 mm). Chaque numéro est unique ; une étiquette vierge est associée à une palette lors de la réception.</p>
+      <label for="iNbEtiq">Nombre d'étiquettes</label>
+      <input id="iNbEtiq" type="number" min="1" max="240" value="24">
+      <div class="err" id="eEtiq"></div>
+      <button class="btn" id="bEtiq">Créer et imprimer</button>
+    </div>
+    <div id="planches"></div>
+  </section>
+
+  <!-- Synchronisation -->
+  <section id="vSync" class="cache">
+    <button class="retour" data-aller="accueil">‹ Accueil</button>
+    <div id="sync"></div>
   </section>
 
   <!-- Menu -->
   <section id="vMenu" class="cache">
-    <button class="retour" id="bRetourMenu">‹ Retour</button>
+    <button class="retour" data-aller="accueil">‹ Accueil</button>
     <div class="carte">
       <div id="menuInfo" class="info"></div>
       <button class="btn" id="bMenuActu" style="margin-top:14px">Actualiser les données</button>
@@ -126,7 +219,21 @@ footer{text-align:center;font-size:12px;color:var(--gris);padding:8px 0 20px}
   </section>
   <footer id="pied"></footer>
 </main>
+
+<!-- Scanner QR -->
+<div id="scan" class="cache">
+  <video id="video" playsinline muted></video>
+  <div class="cadre"></div>
+  <div class="bas">
+    <div class="info" id="scanInfo">Visez l'étiquette QR de la palette.</div>
+    <div class="avecBtn" style="margin-top:8px"><input id="iScanManuel" autocapitalize="characters" placeholder="ou tapez le n° : P00001"><button class="btn2" id="bScanOk">OK</button></div>
+    <button class="btn2" id="bScanFermer" style="width:100%;margin-top:8px">Annuler</button>
+  </div>
+</div>
+
+<div id="toast" class="cache" role="status"></div>
 <div id="barreInstall" class="cache"><button class="btn" id="bInstall">Installer CasaFino sur ce téléphone</button></div>
+<div id="print"></div>
 <script src="app.js"></script>
 </body>
 </html>

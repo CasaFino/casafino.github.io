@@ -1,10 +1,19 @@
-/* CasaFino — service worker — version 1.1 (2026-10-22)
-   Garde l'app sur le téléphone pour qu'elle s'ouvre sans réseau. Les appels à l'API ne sont jamais mis en cache ici. */
-var CACHE = "casafino-1.1";
-var FICHIERS = ["./", "index.html", "app.js", "manifest.webmanifest", "icon-192.png", "icon-512.png", "icon-maskable-192.png", "icon-maskable-512.png", "apple-touch-icon.png", "logo.png"];
+/* CasaFino — service worker — version 2.0 (2026-10-22)
+   Garde l'app sur le téléphone pour qu'elle s'ouvre sans réseau. Les appels à l'API ne sont jamais mis en cache.
+   Les deux bibliothèques QR (lecture, impression) sont gardées en cache après leur premier chargement. */
+var CACHE = "casafino-2.0";
+var FICHIERS = ["./", "index.html", "app.js", "manifest.webmanifest", "icon-192.png", "icon-512.png",
+  "icon-maskable-192.png", "icon-maskable-512.png", "apple-touch-icon.png", "logo.png"];
+var LIBS = ["https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js",
+  "https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"];
 
 self.addEventListener("install", function (e) {
-  e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FICHIERS); }).then(function () { return self.skipWaiting(); }));
+  e.waitUntil(caches.open(CACHE).then(function (c) {
+    return c.addAll(FICHIERS).then(function () {
+      // Bibliothèque de lecture QR : utile hors ligne sur les téléphones sans lecteur intégré (échec sans gravité)
+      return c.add(LIBS[0]).catch(function () {});
+    });
+  }).then(function () { return self.skipWaiting(); }));
 });
 
 self.addEventListener("activate", function (e) {
@@ -13,10 +22,17 @@ self.addEventListener("activate", function (e) {
   }).then(function () { return self.clients.claim(); }));
 });
 
-// Réseau d'abord (pour recevoir les mises à jour), cache si hors ligne
 self.addEventListener("fetch", function (e) {
   var req = e.request;
-  if (req.method !== "GET" || new URL(req.url).origin !== self.location.origin) return;
+  if (req.method !== "GET") return;
+  if (LIBS.indexOf(req.url) >= 0) {           // bibliothèques : cache d'abord
+    e.respondWith(caches.match(req).then(function (r) {
+      return r || fetch(req).then(function (rep) { var c = rep.clone(); caches.open(CACHE).then(function (k) { k.put(req, c); }); return rep; });
+    }));
+    return;
+  }
+  if (new URL(req.url).origin !== self.location.origin) return;
+  // Fichiers de l'app : réseau d'abord (mises à jour), cache si hors ligne
   e.respondWith(fetch(req).then(function (rep) {
     var copie = rep.clone();
     caches.open(CACHE).then(function (c) { c.put(req, copie); });
