@@ -1,11 +1,12 @@
-/* CasaFino — app installable — version 2.0 (2026-10-22)
+/* CasaFino — app installable — version 2.2 (2026-10-23)
+   v2.2 : carnets de 150 étiquettes au format validé (marge d'agrafage, ordre droite puis gauche, souche recto verso).
+   v2.1 : carnets de 100 étiquettes QR (6 par A4) en PDF pour l'imprimerie, sans connexion à un service externe.
    v2.0 : étape 2 — accueil par rôle, réception par arrivage, palettes QR, déplacement, casse, inventaire,
           à repositionner, étiquettes imprimables, file d'opérations hors ligne synchronisée.
    v1.1 : logo CasaFino. v1.0 : activation, connexion PIN, catalogue hors ligne, calcul de vente. */
 "use strict";
-var APP_VERSION = "2.0";
+var APP_VERSION = "2.2";
 var API = "https://script.google.com/macros/s/AKfycbw2afPgs_lQHn9eN4gUd5zxdiLT_CpLNkNrRbOabBetxUs8Fsx__WRzXmfzkkHKtC9A/exec";
-var LIB_QR_GEN = "https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js";
 var LIB_QR_LECTURE = "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js";
 var ROLES_DEPOT = ["Magasinier", "Direction"];
 var MOTIFS_CASSE = ["Manutention", "Transport", "Défaut de fabrication", "Autre"];
@@ -622,43 +623,130 @@ $("repos").onclick = function (e) {
   ajouterOperation("repositionner", { code: code, zone: z }); toast(code + " repositionné vers " + z); afficherRepos();
 };
 
-// ── Étiquettes (direction, à imprimer depuis un ordinateur) ──
+// ── Carnets d'étiquettes (direction) : PDF pour l'imprimerie ─
 function afficherEtiquettes() {
   voir("vEtiquettes");
-  var d = etat.donnees, pl = (d && d.planches) || [];
-  $("planches").innerHTML = pl.length ? '<div class="carte"><h3 style="margin-top:0">Réimprimer</h3><table>' + pl.map(function (p, i) {
-    return "<tr><td>" + esc(p.planche) + "<br><span class='info'>" + esc(p.ids[0]) + " → " + esc(p.ids[p.ids.length - 1]) + " (" + p.ids.length + ")</span></td>" +
-      '<td><button class="btn2" data-planche="' + i + '">Imprimer</button></td></tr>';
+  var d = etat.donnees, cs = (d && d.carnets) || [];
+  $("planches").innerHTML = cs.length ? '<div class="carte"><h3 style="margin-top:0">Carnets créés</h3><table>' + cs.map(function (c, i) {
+    return "<tr><td><b>" + esc(c.nom) + "</b> · " + esc(c.ids[0]) + " à " + esc(c.ids[c.ids.length - 1]) + "<br><span class='info'>Créé le " + esc(c.date) +
+      (c.par ? " par " + esc(c.par) : "") + " · " + c.utilisees + " / " + c.ids.length + " utilisées</span></td>" +
+      '<td><button class="btn2" data-carnet="' + i + '">PDF</button></td></tr>';
   }).join("") + "</table></div>" : "";
 }
 $("planches").onclick = function (e) {
-  var b = e.target.closest("[data-planche]"); if (!b) return;
-  imprimerEtiquettes(etat.donnees.planches[Number(b.getAttribute("data-planche"))].ids).catch(function (x) { toast(x.message, true); });
+  var b = e.target.closest("[data-carnet]"); if (!b) return;
+  var c = etat.donnees.carnets[Number(b.getAttribute("data-carnet"))];
+  b.disabled = true; pdfCarnet(c).catch(function (x) { toast(x.message, true); }).then(function () { b.disabled = false; });
 };
 $("bEtiq").onclick = function () {
   var n = Math.floor(Number($("iNbEtiq").value)), b = this;
   $("eEtiq").textContent = "";
-  if (!(n >= 1 && n <= 240)) return ($("eEtiq").textContent = "Entre 1 et 240 étiquettes.");
-  if (!navigator.onLine) return ($("eEtiq").textContent = "La création d'étiquettes demande du réseau.");
-  b.disabled = true;
-  api("etiquettes", { nombre: n }).then(function (j) {
-    toast(j.planche + " : " + j.ids[0] + " → " + j.ids[j.ids.length - 1]);
-    actualiser();
-    return imprimerEtiquettes(j.ids);
-  }).catch(function (x) { $("eEtiq").textContent = x.message; }).then(function () { b.disabled = false; });
+  if (!(n >= 1 && n <= 5)) return ($("eEtiq").textContent = "Entre 1 et 5 carnets à la fois.");
+  if (!navigator.onLine) return ($("eEtiq").textContent = "La création de carnets demande du réseau (réservation des numéros).");
+  if (!b.dataset.confirme) { b.dataset.confirme = "1"; b.textContent = "Confirmer : réserver " + (n * 150) + " numéros (" + n + " carnet" + (n > 1 ? "s" : "") + ")"; return; }
+  b.disabled = true; delete b.dataset.confirme; b.textContent = "Création…";
+  api("carnets", { nombre: n }).then(function (j) {
+    var suite = Promise.resolve();
+    j.carnets.forEach(function (c) { suite = suite.then(function () { return pdfCarnet(c); }); });
+    return suite.then(function () { toast(j.carnets.length + " carnet(s) créé(s) : PDF téléchargé(s)."); actualiser(); });
+  }).catch(function (x) { $("eEtiq").textContent = x.message; })
+    .then(function () { b.disabled = false; b.textContent = "Créer et télécharger le PDF"; });
 };
 
-function imprimerEtiquettes(ids) {
-  return chargerScript(LIB_QR_GEN).then(function () {
-    var html = "";
-    for (var i = 0; i < ids.length; i += 24) {
-      html += '<div class="planche">' + ids.slice(i, i + 24).map(function (id) {
-        var qr = qrcode(0, "M"); qr.addData(id); qr.make();
-        return '<div class="etiq">' + qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true }) + "<div><b>" + esc(id) + "</b><span>CasaFino · palette</span></div></div>";
-      }).join("") + "</div>";
-    }
-    $("print").innerHTML = html;
-    setTimeout(function () { window.print(); }, 300);
+/** PDF d'un carnet (format validé par la direction) :
+    page 1 = garde (recto) + souche, page 2 = suite de la souche (verso de la garde),
+    pages 3 et suivantes = 25 feuilles A4 de 6 étiquettes, marge d'agrafage de 15 mm à gauche,
+    ordre : colonne de droite de haut en bas (1-2-3), puis colonne de gauche (4-5-6). QR vectoriel. */
+function pdfCarnet(c) {
+  return Promise.all([chargerScript("pdf-lib.min.js"), chargerScript("qr.js")]).then(function () {
+    var P = PDFLib, MM = 72 / 25.4, W = 210 * MM, H = 297 * MM, AGR = 15 * MM, LW = (210 - 15) / 2 * MM, LH = 99 * MM;
+    var BLEU = P.rgb(11 / 255, 34 / 255, 135 / 255), OR = P.rgb(184 / 255, 134 / 255, 11 / 255), NOIR = P.rgb(0, 0, 0),
+      GRIS = P.rgb(0.7, 0.7, 0.7), GRIS2 = P.rgb(0.4, 0.4, 0.4), FOND = P.rgb(0.93, 0.94, 0.98);
+    var doc, f, fb, logo;
+    return P.PDFDocument.create().then(function (d) {
+      doc = d; doc.setTitle("CasaFino - " + c.nom); doc.setAuthor("CasaFino"); doc.setCreator("CasaFino app " + APP_VERSION);
+      return Promise.all([doc.embedFont(P.StandardFonts.Helvetica), doc.embedFont(P.StandardFonts.HelveticaBold),
+        fetch("logo.png").then(function (r) { return r.arrayBuffer(); }).then(function (o) { return doc.embedPng(o); }).catch(function () { return null; })]);
+    }).then(function (r) {
+      f = r[0]; fb = r[1]; logo = r[2];
+      var texte = function (pg, txt, x, y, taille, police, couleur) { pg.drawText(txt, { x: x, y: y, size: taille, font: police, color: couleur || NOIR }); };
+      var centre = function (pg, txt, cx, y, taille, police, couleur) { texte(pg, txt, cx - police.widthOfTextAtSize(txt, taille) / 2, y, taille, police, couleur); };
+      var trait = function (pg, x1, y1, x2, y2, ep, coul) { pg.drawLine({ start: { x: x1, y: y1 }, end: { x: x2, y: y2 }, thickness: ep || 0.5, color: coul || GRIS }); };
+
+      // ── Souche : tableau en 2 blocs (QR code | Désignation article | Date + visa) ──
+      var LIGNE = 6 * MM, ENTETE = 7 * MM, COLS = [21, 45, 25], ESP = 5 * MM;
+      var tableau = function (pg, xg, xd, yHaut, yBas, ids, titre) {
+        texte(pg, titre, xg, yHaut - 4.5 * MM, 11, fb, BLEU);
+        yHaut -= 7 * MM;
+        var lignes = Math.floor((yHaut - ENTETE - yBas) / LIGNE), largeurBloc = (xd - xg - ESP) / 2, k = 0;
+        for (var b = 0; b < 2; b++) {
+          var x0 = xg + b * (largeurBloc + ESP), ech = largeurBloc / (91 * MM), xs = [x0];
+          COLS.forEach(function (w) { xs.push(xs[xs.length - 1] + w * MM * ech); });
+          pg.drawRectangle({ x: x0, y: yHaut - ENTETE, width: largeurBloc, height: ENTETE, color: FOND });
+          ["QR code", "Désignation article", "Date + visa"].forEach(function (t, i) { centre(pg, t, (xs[i] + xs[i + 1]) / 2, yHaut - ENTETE + 2.3 * MM, 8, fb, BLEU); });
+          var yFin = yHaut - ENTETE - lignes * LIGNE;
+          for (var l = 0; l < lignes; l++) {
+            var y = yHaut - ENTETE - (l + 1) * LIGNE;
+            trait(pg, x0, y, x0 + largeurBloc, y, 0.4);
+            if (k < ids.length) { texte(pg, ids[k], xs[0] + 1.8 * MM, y + 1.8 * MM, 9, fb); k++; }
+          }
+          trait(pg, x0, yHaut, x0 + largeurBloc, yHaut, 0.8, NOIR);
+          trait(pg, x0, yHaut - ENTETE, x0 + largeurBloc, yHaut - ENTETE, 0.8, NOIR);
+          xs.forEach(function (x, i) { trait(pg, x, yHaut, x, yFin, i === 0 || i === xs.length - 1 ? 0.8 : 0.4, i === 0 || i === xs.length - 1 ? NOIR : GRIS); });
+        }
+        return k;   // nombre de numéros placés
+      };
+
+      // Page 1 : garde (recto)
+      var g = doc.addPage([W, H]), xg = AGR, xd = W - 8 * MM, y = H - 10 * MM;
+      if (logo) { var lw = 48 * MM, lh = lw * logo.height / logo.width; g.drawImage(logo, { x: xg, y: y - lh, width: lw, height: lh }); }
+      var tx = xg + 54 * MM;
+      texte(g, "Carnet d'étiquettes palettes", tx, y - 7 * MM, 15, fb, BLEU);
+      texte(g, c.nom, tx, y - 18 * MM, 26, fb, OR);
+      texte(g, c.ids[0] + "  à  " + c.ids[c.ids.length - 1] + "   ·   " + c.ids.length + " étiquettes", tx, y - 27 * MM, 13, fb);
+      texte(g, "Créé le " + c.date + (c.par ? " par " + c.par : "") + " · À conserver par la direction.", tx, y - 34 * MM, 9, f, GRIS2);
+      texte(g, "Une étiquette = une seule palette, jamais réutilisée. Scanner l'étiquette dans l'app CasaFino (Réception).", xg, y - 42 * MM, 8.5, f, GRIS2);
+      texte(g, "Impression : page 1-2 recto verso sur papier ; pages 3 à " + (2 + Math.ceil(c.ids.length / 6)) + " recto seul sur adhésif A4, à 100 %.", xg, y - 46.5 * MM, 8.5, f, GRIS2);
+      trait(g, xg, y - 49.5 * MM, xd, y - 49.5 * MM, 1.2, OR);
+      var faits = tableau(g, xg, xd, y - 51 * MM, 10 * MM, c.ids, "Souche — à remplir par le responsable du magasin (1/2)");
+      // Page 2 : verso de la garde (marge d'agrafage à droite)
+      var v = doc.addPage([W, H]);
+      var reste = c.ids.slice(faits);
+      var faits2 = tableau(v, 8 * MM, W - AGR, H - 10 * MM, 10 * MM, reste, "Souche — " + c.nom + " (2/2)");
+      if (faits2 < reste.length) throw new Error("Souche trop longue pour la page de garde.");
+
+      // Pages d'étiquettes
+      for (var i = 0; i < c.ids.length; i += 6) {
+        var pg = doc.addPage([W, H]);
+        trait(pg, AGR, 0, AGR, H, 0.6, GRIS);
+        pg.drawText("Agrafage", { x: 9 * MM, y: H / 2 - 12 * MM, size: 9, font: f, color: GRIS2, rotate: P.degrees(90) });
+        trait(pg, AGR + LW, 0, AGR + LW, H, 0.4);
+        [1, 2].forEach(function (k) { trait(pg, AGR, H - k * LH, W, H - k * LH, 0.4); });
+        c.ids.slice(i, i + 6).forEach(function (id, j) {
+          var col = j < 3 ? 1 : 0, lig = j % 3;                       // 1-2-3 à droite, 4-5-6 à gauche
+          var x0 = AGR + col * LW, y0 = H - (lig + 1) * LH, cx = x0 + LW / 2;
+          centre(pg, "CasaFino", cx, y0 + LH - 11 * MM, 13, fb, BLEU);
+          trait(pg, cx - 18 * MM, y0 + LH - 13.5 * MM, cx + 18 * MM, y0 + LH - 13.5 * MM, 1.2, OR);
+          var m = CF_QR.matrice(id), n = m.length, cote = 58 * MM, mod = cote / n, qx = cx - cote / 2, qy = y0 + 23 * MM;
+          for (var yy = 0; yy < n; yy++) {
+            for (var xx = 0; xx < n; xx++) {
+              if (!m[yy][xx]) continue;
+              var deb = xx; while (xx + 1 < n && m[yy][xx + 1]) xx++;
+              pg.drawRectangle({ x: qx + deb * mod, y: qy + (n - 1 - yy) * mod, width: (xx - deb + 1) * mod + 0.15, height: mod + 0.15, color: NOIR });
+            }
+          }
+          centre(pg, id, cx, y0 + 10 * MM, 30, fb, NOIR);
+          centre(pg, c.nom + " · palette", cx, y0 + 4.5 * MM, 8, f, GRIS2);
+        });
+      }
+      return doc.save();
+    }).then(function (octets) {
+      var nom = "CasaFino_Carnet_" + ("00" + c.carnet).slice(-3) + "_" + c.ids[0] + "-" + c.ids[c.ids.length - 1] + ".pdf";
+      var url = URL.createObjectURL(new Blob([octets], { type: "application/pdf" }));
+      var a = document.createElement("a"); a.href = url; a.download = nom; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+      return nom;
+    });
   });
 }
 
@@ -695,7 +783,7 @@ function scanner(rappel) {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { $("scanInfo").textContent = "Caméra indisponible : tapez le numéro."; return; }
   navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false }).then(function (flux) {
     if (!scanEtat.actif) { flux.getTracks().forEach(function (t) { t.stop(); }); return; }
-    scanEtat.flux = flux; var v = $("video"); v.srcObject = flux; v.play();
+    scanEtat.flux = flux; var v = $("video"); v.srcObject = flux; var lec = v.play(); if (lec && lec.catch) lec.catch(function () {});
     if ("BarcodeDetector" in window) {
       try { scanEtat.detecteur = new BarcodeDetector({ formats: ["qr_code"] }); } catch (e) { scanEtat.detecteur = null; }
     }

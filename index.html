@@ -81,18 +81,6 @@ td:last-child{text-align:right}
 #scan .bas{background:#fff;padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
 #barreInstall{position:fixed;left:16px;right:16px;bottom:16px;z-index:9;max-width:688px;margin:0 auto}
 footer{text-align:center;font-size:12px;color:var(--gris);padding:8px 0 20px}
-#print{display:none}
-@media print{
-  @page{size:A4;margin:0}
-  body{background:#fff}
-  header,main,#toast,#scan,#barreInstall{display:none!important}
-  #print{display:block}
-  .planche{width:210mm;height:297mm;display:grid;grid-template-columns:repeat(3,70mm);grid-auto-rows:37.125mm;page-break-after:always}
-  .etiq{display:flex;align-items:center;gap:3mm;padding:3mm 4mm;overflow:hidden}
-  .etiq svg,.etiq img{width:29mm;height:29mm;flex:none}
-  .etiq b{font:700 20pt/1 Arial,sans-serif;display:block}
-  .etiq span{font:9pt Arial,sans-serif;color:#0b2287;display:block;margin-top:2mm}
-}
 </style>
 </head>
 <body>
@@ -192,12 +180,12 @@ footer{text-align:center;font-size:12px;color:var(--gris);padding:8px 0 20px}
   <section id="vEtiquettes" class="cache">
     <button class="retour" data-aller="accueil">‹ Accueil</button>
     <div class="carte">
-      <h2>Étiquettes QR des palettes</h2>
-      <p class="info">À imprimer depuis un ordinateur sur planches A4 de 24 étiquettes (3 × 8, 70 × 37 mm). Chaque numéro est unique ; une étiquette vierge est associée à une palette lors de la réception.</p>
-      <label for="iNbEtiq">Nombre d'étiquettes</label>
-      <input id="iNbEtiq" type="number" min="1" max="240" value="24">
+      <h2>Carnets d'étiquettes palettes</h2>
+      <p class="info">Un carnet = 150 numéros uniques : page de garde recto verso avec la souche, puis 25 feuilles A4 de 6 étiquettes (marge d'agrafage à gauche). Le PDF est à imprimer sur adhésif ; les carnets sont gardés par la direction et une étiquette est associée à une palette lors de la réception.</p>
+      <label for="iNbEtiq">Nombre de carnets</label>
+      <input id="iNbEtiq" type="number" min="1" max="5" value="1">
       <div class="err" id="eEtiq"></div>
-      <button class="btn" id="bEtiq">Créer et imprimer</button>
+      <button class="btn" id="bEtiq">Créer et télécharger le PDF</button>
     </div>
     <div id="planches"></div>
   </section>
@@ -233,7 +221,6 @@ footer{text-align:center;font-size:12px;color:var(--gris);padding:8px 0 20px}
 
 <div id="toast" class="cache" role="status"></div>
 <div id="barreInstall" class="cache"><button class="btn" id="bInstall">Installer CasaFino sur ce téléphone</button></div>
-<div id="print"></div>
 <script src="app.js"></script>
 </body>
 </html>
