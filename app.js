@@ -1,4 +1,5 @@
-/* CasaFino — app installable — version 2.3 (2026-10-23)
+/* CasaFino — app installable — version 3.0 (2026-10-23)
+   v3.0 : étape 3 — ventes (module vente.js) : devis, encaissements, reçu, bon de sortie, factures, caisse, validations.
    v2.3 : zones du dépôt 01 avec leur occupation (palettes / capacité) dans les listes.
    v2.2 : carnets de 150 étiquettes au format validé (marge d'agrafage, ordre droite puis gauche, souche recto verso).
    v2.1 : carnets de 100 étiquettes QR (6 par A4) en PDF pour l'imprimerie, sans connexion à un service externe.
@@ -6,7 +7,7 @@
           à repositionner, étiquettes imprimables, file d'opérations hors ligne synchronisée.
    v1.1 : logo CasaFino. v1.0 : activation, connexion PIN, catalogue hors ligne, calcul de vente. */
 "use strict";
-var APP_VERSION = "2.3";
+var APP_VERSION = "3.0";
 var API = "https://script.google.com/macros/s/AKfycbw2afPgs_lQHn9eN4gUd5zxdiLT_CpLNkNrRbOabBetxUs8Fsx__WRzXmfzkkHKtC9A/exec";
 var LIB_QR_LECTURE = "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js";
 var ROLES_DEPOT = ["Magasinier", "Direction"];
@@ -48,8 +49,12 @@ function toast(msg, erreur) {
 
 function chargerScript(url) {
   return new Promise(function (ok, ko) {
-    if (document.querySelector('script[src="' + url + '"]')) return ok();
-    var s = document.createElement("script"); s.src = url; s.onload = ok; s.onerror = function () { ko(new Error("Chargement impossible : " + url)); };
+    var deja = document.querySelector('script[src="' + url + '"]');
+    if (deja && deja.dataset.ok) return ok();
+    if (deja) deja.remove();
+    var s = document.createElement("script"); s.src = url;
+    s.onload = function () { s.dataset.ok = "1"; ok(); };
+    s.onerror = function () { s.remove(); ko(new Error("Chargement impossible (réseau ?) : " + url)); };
     document.head.appendChild(s);
   });
 }
@@ -100,6 +105,7 @@ function rafraichirVue() {
     case "vRepos": afficherRepos(); break;
     case "vEtiquettes": afficherEtiquettes(); break;
     case "vSync": afficherSync(); break;
+    default: if (typeof rafraichirVente === "function") rafraichirVente(etat.vue);
   }
 }
 
@@ -166,7 +172,7 @@ function erreurs() { return S.get("erreurs", []) || []; }
 
 /** Ajoute une opération : appliquée tout de suite sur le téléphone, envoyée dès qu'il y a du réseau. */
 function ajouterOperation(type, data) {
-  var op = { jeton: uuid(), type: type, date: new Date().toISOString(), data: data, agent: session().agent };
+  var op = { jeton: uuid(), type: type, date: new Date().toISOString(), data: data, agent: session().agent, role: session().role };
   var f = file(); f.push(op); S.set("file", f);
   recomposer(); majEtat();
   synchroniser();
@@ -222,7 +228,7 @@ function recomposer() {
   var d = JSON.parse(JSON.stringify(etat.serveur));
   ["palettes", "receptions", "etiquettesLibres", "alertes", "zones"].forEach(function (k) { if (!d[k]) d[k] = []; });
   file().forEach(function (op) { try { appliquer(d, op); } catch (e) {} });
-  if (estDepot()) recalculerStock(d);
+  if (estDepot() || (d.palettes && d.palettes.length)) recalculerStock(d);
   etat.donnees = d;
 }
 
@@ -259,6 +265,8 @@ function appliquer(d, op) {
       d.alertes = d.alertes.filter(function (a) { return a.code !== x.code; });
       d.alertes.push({ code: x.code, statut: "Repositionnée", zone: x.zone });
       break;
+    default:
+      if (typeof appliquerVente === "function") appliquerVente(d, op);
   }
 }
 
@@ -295,6 +303,7 @@ function afficherAccueil() {
     t.push(["repos", "↪️", "À repositionner", aRepositionner(d).length]);
   }
   if (dir) t.push(["etiquettes", "🖨️", "Étiquettes", 0]);
+  if (typeof tuilesVente === "function") tuilesVente(t);
   t.push(["sync", "⇅", "Synchronisation", file().length + erreurs().length]);
   $("tuiles").innerHTML = t.map(function (x) {
     return '<div class="tuile" data-aller="' + x[0] + '"><span class="ic">' + x[1] + "</span><b>" + x[2] + "</b>" +

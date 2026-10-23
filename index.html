@@ -80,6 +80,7 @@ td:last-child{text-align:right}
 #scan .cadre{position:absolute;left:50%;top:40%;width:60vmin;height:60vmin;transform:translate(-50%,-50%);border:3px solid #fff;border-radius:16px;box-shadow:0 0 0 2000px rgba(0,0,0,.35);pointer-events:none}
 #scan .bas{background:#fff;padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
 #barreInstall{position:fixed;left:16px;right:16px;bottom:16px;z-index:9;max-width:688px;margin:0 auto}
+.seg2{display:flex;gap:16px;flex-wrap:wrap;margin:6px 0}.seg2 label{display:flex;gap:6px;align-items:center;margin:0;color:var(--texte);font-size:15px}.seg2 input{width:auto}
 footer{text-align:center;font-size:12px;color:var(--gris);padding:8px 0 20px}
 </style>
 </head>
@@ -196,6 +197,16 @@ footer{text-align:center;font-size:12px;color:var(--gris);padding:8px 0 20px}
     <div id="sync"></div>
   </section>
 
+  <!-- Ventes -->
+  <section id="vVentes" class="cache"><button class="retour" data-aller="accueil">‹ Accueil</button><div id="ventes"></div></section>
+  <section id="vVente" class="cache"><button class="retour" data-aller="ventes">‹ Ventes</button><div id="venteEd"></div></section>
+  <section id="vDetail" class="cache"><button class="retour" data-aller="ventes">‹ Ventes</button><div id="venteDet"></div></section>
+  <section id="vEncaisser" class="cache"><button class="retour" data-aller="ventes">‹ Ventes</button><div id="encaisser"></div></section>
+  <section id="vSorties" class="cache"><button class="retour" data-aller="accueil">‹ Accueil</button><div id="sorties"></div></section>
+  <section id="vPicking" class="cache"><button class="retour" data-aller="sorties">‹ Sorties</button><div id="picking"></div></section>
+  <section id="vCaisse" class="cache"><button class="retour" data-aller="accueil">‹ Accueil</button><div id="caisse"></div></section>
+  <section id="vValider" class="cache"><button class="retour" data-aller="accueil">‹ Accueil</button><h2 style="margin:0 0 6px">À valider</h2><div id="valider"></div></section>
+
   <!-- Menu -->
   <section id="vMenu" class="cache">
     <button class="retour" data-aller="accueil">‹ Accueil</button>
@@ -222,5 +233,6 @@ footer{text-align:center;font-size:12px;color:var(--gris);padding:8px 0 20px}
 <div id="toast" class="cache" role="status"></div>
 <div id="barreInstall" class="cache"><button class="btn" id="bInstall">Installer CasaFino sur ce téléphone</button></div>
 <script src="app.js"></script>
+<script src="vente.js"></script>
 </body>
 </html>
