@@ -1,7 +1,7 @@
-/* CasaFino — service worker — version 2.2 (2026-10-23)
+/* CasaFino — service worker — version 2.3 (2026-10-23)
    Garde l'app sur le téléphone pour qu'elle s'ouvre sans réseau. Les appels à l'API ne sont jamais mis en cache.
    La bibliothèque de lecture QR de secours est gardée en cache après son premier chargement. */
-var CACHE = "casafino-2.2";
+var CACHE = "casafino-2.3";
 var FICHIERS = ["./", "index.html", "app.js", "manifest.webmanifest", "icon-192.png", "icon-512.png",
   "icon-maskable-192.png", "icon-maskable-512.png", "apple-touch-icon.png", "logo.png", "qr.js", "pdf-lib.min.js"];
 var LIBS = ["https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"];

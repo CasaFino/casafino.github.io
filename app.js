@@ -1,11 +1,12 @@
-/* CasaFino — app installable — version 2.2 (2026-10-23)
+/* CasaFino — app installable — version 2.3 (2026-10-23)
+   v2.3 : zones du dépôt 01 avec leur occupation (palettes / capacité) dans les listes.
    v2.2 : carnets de 150 étiquettes au format validé (marge d'agrafage, ordre droite puis gauche, souche recto verso).
    v2.1 : carnets de 100 étiquettes QR (6 par A4) en PDF pour l'imprimerie, sans connexion à un service externe.
    v2.0 : étape 2 — accueil par rôle, réception par arrivage, palettes QR, déplacement, casse, inventaire,
           à repositionner, étiquettes imprimables, file d'opérations hors ligne synchronisée.
    v1.1 : logo CasaFino. v1.0 : activation, connexion PIN, catalogue hors ligne, calcul de vente. */
 "use strict";
-var APP_VERSION = "2.2";
+var APP_VERSION = "2.3";
 var API = "https://script.google.com/macros/s/AKfycbw2afPgs_lQHn9eN4gUd5zxdiLT_CpLNkNrRbOabBetxUs8Fsx__WRzXmfzkkHKtC9A/exec";
 var LIB_QR_LECTURE = "https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js";
 var ROLES_DEPOT = ["Magasinier", "Direction"];
@@ -419,9 +420,14 @@ function afficherCalcul(a, m2) {
 $("bRetourFiche").onclick = function () { etat.article = null; afficherCatalogue(); };
 
 // ── Sélecteurs communs ───────────────────────────────────────
+/** Liste des zones avec l'occupation : palettes présentes / capacité (4 niveaux). Zones pleines signalées. */
 function optionsZones(d, choix) {
+  var occ = {};
+  d.palettes.forEach(function (p) { if (p.cartons > 0) { var k = p.depot + " › " + p.zone; occ[k] = (occ[k] || 0) + 1; } });
   return d.zones.map(function (z) {
-    return '<option value="' + esc(z.cle) + '"' + (z.cle === choix ? " selected" : "") + ">" + esc(z.cle) + (z.type ? " (" + esc(z.type) + ")" : "") + "</option>";
+    var n = occ[z.cle] || 0, cap = z.capacite || 0;
+    var info = cap ? " · " + n + "/" + cap + (n >= cap ? " PLEINE" : "") : (z.type ? " (" + z.type + ")" : "");
+    return '<option value="' + esc(z.cle) + '"' + (z.cle === choix ? " selected" : "") + ">" + esc(z.zone) + esc(info) + "</option>";
   }).join("");
 }
 function zoneRestes(d) { var z = d.zones.filter(function (z) { return z.type === "Restes"; })[0]; return z ? z.cle : (d.zones[0] || {}).cle; }
@@ -498,6 +504,11 @@ function enregistrerReception(num) {
   if (!lot) return (err.textContent = "Le lot (teinte / calibre) est obligatoire.");
   if (!(cartons > 0 && cartons === Math.floor(cartons))) return (err.textContent = "Nombre de cartons invalide.");
   if (!zone) return (err.textContent = "Choisissez la zone.");
+  var zz = zoneParCle(d, zone), occ = d.palettes.filter(function (p) { return p.cartons > 0 && p.depot + " › " + p.zone === zone; }).length;
+  if (zz && zz.capacite && occ >= zz.capacite && !$("rOk").dataset.pleine) {
+    $("rOk").dataset.pleine = "1"; err.textContent = "La zone " + zz.zone + " est pleine (" + occ + "/" + zz.capacite + "). Appuyez encore pour enregistrer quand même.";
+    return;
+  }
   var a = article(d, code);
   if (a && a.cartonsPalette > 0 && cartons > a.cartonsPalette * 1.5 && !$("rOk").dataset.confirme) {
     $("rOk").dataset.confirme = "1"; $("rOk").textContent = "Confirmer " + cartons + " cartons (palette type : " + a.cartonsPalette + ")";
